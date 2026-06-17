@@ -3,35 +3,40 @@
 import { useCountdown } from "@/lib/hooks";
 import { FILM_CONFIG } from "@/lib/film";
 import { motion } from "motion/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-export function SealedFilm() {
-  const countdown = useCountdown(FILM_CONFIG.eventDate);
+export function SealedFilm({ onJoined }: { onJoined: () => void }) {
+  const countdown = useCountdown(FILM_CONFIG.revealDate);
   const [name, setName] = useState("");
-  const [joined, setJoined] = useState(false);
-  const [guestCount, setGuestCount] = useState(0);
-
-  useEffect(() => {
-    const storedId = localStorage.getItem("guest-id");
-    if (storedId) setJoined(true);
-  }, []);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleJoin(e: React.FormEvent) {
     e.preventDefault();
-    if (!name.trim()) return;
+    if (!name.trim() || loading) return;
 
-    const res = await fetch("/api/join", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim() }),
-    });
+    setLoading(true);
+    setError(null);
 
-    if (res.ok) {
-      const data = await res.json();
-      localStorage.setItem("guest-id", data.id);
-      localStorage.setItem("guest-name", name.trim());
-      setGuestCount(data.guestCount);
-      setJoined(true);
+    try {
+      const res = await fetch("/api/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim() }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem("guest-id", data.id);
+        localStorage.setItem("guest-name", name.trim());
+        onJoined();
+      } else {
+        setError("Couldn't join. Try again.");
+      }
+    } catch {
+      setError("No connection. Check your signal.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -54,7 +59,7 @@ export function SealedFilm() {
         transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
         className="text-center max-w-sm w-full relative z-10"
       >
-        {/* Film canister — larger, bolder */}
+        {/* Film canister */}
         <motion.div
           className="mb-10 relative inline-block"
           animate={{ rotate: [0, 2, -2, 0] }}
@@ -95,7 +100,7 @@ export function SealedFilm() {
           A film for one night
         </motion.p>
 
-        {/* Countdown */}
+        {/* Countdown to reveal */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -110,7 +115,7 @@ export function SealedFilm() {
             }}
           />
           <p className="text-film-cream/50 text-xs mb-3 font-light tracking-wide uppercase relative">
-            Film sealed — opens in
+            Photos reveal in
           </p>
           <div className="grid grid-cols-4 gap-1 relative">
             {[
@@ -137,59 +142,37 @@ export function SealedFilm() {
           </div>
         </motion.div>
 
-        {/* Join form or confirmed state */}
-        {!joined ? (
-          <motion.form
-            onSubmit={handleJoin}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="space-y-3"
+        {/* Join form */}
+        <motion.form
+          onSubmit={handleJoin}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="space-y-3"
+        >
+          <p className="text-film-cream/50 text-sm mb-4 font-light">
+            Enter your name to start shooting
+          </p>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Your first name"
+            className="w-full px-5 py-3.5 bg-film-dark/80 border border-film-brown/50 rounded-xl text-film-cream placeholder:text-film-cream/25 focus:outline-none focus:border-film-amber/70 focus:shadow-[0_0_20px_oklch(0.75_0.14_70_/_0.1)] transition-all text-center text-lg"
+            autoFocus
+            disabled={loading}
+          />
+          <button
+            type="submit"
+            disabled={!name.trim() || loading}
+            className="w-full py-3.5 bg-film-amber text-film-black font-semibold rounded-xl transition-all hover:bg-film-gold hover:shadow-[0_0_30px_oklch(0.82_0.12_80_/_0.3)] disabled:opacity-20 disabled:cursor-not-allowed active:scale-[0.98]"
           >
-            <p className="text-film-cream/50 text-sm mb-4 font-light">
-              Enter your name to join the roll
-            </p>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your first name"
-              className="w-full px-5 py-3.5 bg-film-dark/80 border border-film-brown/50 rounded-xl text-film-cream placeholder:text-film-cream/25 focus:outline-none focus:border-film-amber/70 focus:shadow-[0_0_20px_oklch(0.75_0.14_70_/_0.1)] transition-all text-center text-lg"
-              autoFocus
-            />
-            <button
-              type="submit"
-              disabled={!name.trim()}
-              className="w-full py-3.5 bg-film-amber text-film-black font-semibold rounded-xl transition-all hover:bg-film-gold hover:shadow-[0_0_30px_oklch(0.82_0.12_80_/_0.3)] disabled:opacity-20 disabled:cursor-not-allowed active:scale-[0.98]"
-            >
-              Join the film
-            </button>
-          </motion.form>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", damping: 15 }}
-            className="text-center"
-          >
-            <div className="inline-flex items-center gap-2.5 bg-film-amber/10 border border-film-amber/30 rounded-full px-5 py-2.5 mb-3">
-              <motion.div
-                className="w-2.5 h-2.5 rounded-full bg-film-amber"
-                animate={{ opacity: [1, 0.4, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-              <span className="text-film-amber text-sm font-medium">
-                You&apos;re on the roll
-              </span>
-            </div>
-            {guestCount > 0 && (
-              <p className="text-film-cream/40 text-sm">
-                {guestCount} {guestCount === 1 ? "guest" : "guests"} ready to
-                shoot
-              </p>
-            )}
-          </motion.div>
-        )}
+            {loading ? "Joining..." : "Start shooting"}
+          </button>
+          {error && (
+            <p className="text-red-400/80 text-sm mt-2">{error}</p>
+          )}
+        </motion.form>
       </motion.div>
 
       {/* Film perforations — bottom */}

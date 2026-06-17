@@ -9,10 +9,15 @@ import { RevealedFilm } from "./RevealedFilm";
 
 export function FilmRouter({ initialState }: { initialState: FilmState }) {
   const [state, setState] = useState<FilmState>(initialState);
+  const [hasJoined, setHasJoined] = useState(false);
   const [photoCount, setPhotoCount] = useState(0);
   const [photos, setPhotos] = useState<
     { id: string; url: string; guestName: string; capturedAt: string }[]
   >([]);
+
+  useEffect(() => {
+    setHasJoined(!!localStorage.getItem("guest-id"));
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -41,8 +46,8 @@ export function FilmRouter({ initialState }: { initialState: FilmState }) {
 
   switch (state) {
     case "sealed":
-      return <SealedFilm />;
     case "live":
+      if (!hasJoined) return <SealedFilm onJoined={() => setHasJoined(true)} />;
       return <Camera />;
     case "developing":
       return <DevelopingFilm photoCount={photoCount} />;
