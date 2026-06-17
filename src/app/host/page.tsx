@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { RevealedFilm } from "@/components/RevealedFilm";
 
 type HostData = {
   guestCount: number;
@@ -19,6 +20,7 @@ export default function HostPage() {
   const [data, setData] = useState<HostData | null>(null);
   const [loading, setLoading] = useState(false);
   const [siteUrl, setSiteUrl] = useState("");
+  const [previewGallery, setPreviewGallery] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -75,6 +77,26 @@ export default function HostPage() {
     }
   }
 
+  if (previewGallery && data?.photos) {
+    const previewPhotos = data.photos.map((p) => ({
+      id: p.id,
+      url: p.url,
+      guestName: p.guest_name,
+      capturedAt: p.captured_at,
+    }));
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setPreviewGallery(false)}
+          className="fixed top-4 right-4 z-50 px-4 py-2 bg-film-amber text-film-black text-sm font-medium rounded-lg hover:bg-film-gold transition-colors"
+        >
+          Exit preview
+        </button>
+        <RevealedFilm photos={previewPhotos} />
+      </div>
+    );
+  }
+
   if (!authed) {
     return (
       <div className="min-h-dvh flex items-center justify-center px-6 bg-film-black">
@@ -111,13 +133,22 @@ export default function HostPage() {
               Host control panel
             </p>
           </div>
-          <button
-            onClick={handleDownloadAll}
-            disabled={!data?.photos.length}
-            className="px-4 py-2 bg-film-amber text-film-black rounded-lg text-sm font-medium hover:bg-film-gold transition-colors disabled:opacity-30"
-          >
-            Download all
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPreviewGallery(true)}
+              disabled={!data?.photos.length}
+              className="px-4 py-2 bg-film-dark border border-film-brown/40 text-film-cream/80 rounded-lg text-sm font-medium hover:border-film-amber/50 transition-colors disabled:opacity-30"
+            >
+              Preview gallery
+            </button>
+            <button
+              onClick={handleDownloadAll}
+              disabled={!data?.photos.length}
+              className="px-4 py-2 bg-film-amber text-film-black rounded-lg text-sm font-medium hover:bg-film-gold transition-colors disabled:opacity-30"
+            >
+              Download all
+            </button>
+          </div>
         </div>
 
         {/* QR Code */}
