@@ -107,7 +107,7 @@ export function SealedFilm({ onJoined }: { onJoined: () => void }) {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          im kiefer
+          kiefer and caryin
         </motion.p>
 
         {/* Countdown to reveal */}
