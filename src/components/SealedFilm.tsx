@@ -92,12 +92,22 @@ export function SealedFilm({ onJoined }: { onJoined: () => void }) {
           Once
         </motion.h1>
         <motion.p
-          className="font-mono text-[11px] uppercase tracking-[0.35em] text-film-amber/80 mb-12"
+          className="font-mono text-[11px] uppercase tracking-[0.35em] text-film-amber/80 mb-2"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
           A film for one night
+        </motion.p>
+
+        {/* Added personal text */}
+        <motion.p
+          className="text-film-cream/50 text-sm mb-10 font-light"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+        >
+          im kiefer
         </motion.p>
 
         {/* Countdown to reveal */}
